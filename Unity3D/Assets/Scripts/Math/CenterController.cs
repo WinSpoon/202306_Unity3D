@@ -26,27 +26,45 @@ void Start()
 
 
 }
-     */
+    */
 
     [Range(-90.0f, 90.0f)]
     public float Angle;
+
+
+    [Range(-10.0f, 20.0f)]
+    public float X;
 
     private void Start()
     {
         gameObject.AddComponent<MyGizmo>();
 
+        X = 5.0f;
         Angle = 0.0f;
     }
 
 
     private void Update()
     {
-        float hor = Input.GetAxis("Horizontal");
+        Vector3 StartPoint = new Vector3(0.0f, 0.0f, 0.0f);
+        Vector3 EndPoint = new Vector3(10.0f, 5.0f, 0.0f);
+
+        Debug.DrawLine(StartPoint, EndPoint);
+
+        float Width = EndPoint.x - StartPoint.x;
+        float Height = EndPoint.y - StartPoint.y;
+
+        //float hor = Input.GetAxis("Horizontal");
         float ver = Input.GetAxis("Vertical");
 
+        float Y = 0.0f;
 
-        Vector3 Movement = new Vector3(hor, Mathf.Sin(Angle * Mathf.Deg2Rad) * 5.0f, ver) * 5.0f * Time.deltaTime;
+        if (StartPoint.x < X && X < EndPoint.x)
+            Y = (Height / Width) * X;
+        
 
-        transform.Translate(Movement);
+        Vector3 Movement = new Vector3(X, Y, ver);
+
+        transform.position = Movement;
     }
 }
