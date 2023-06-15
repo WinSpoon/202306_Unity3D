@@ -12,7 +12,9 @@ public class EnemyController : MonoBehaviour
     const int M = 0; // Matrix
 
     public Node Target = null;
-    public List<Vector3> vertices = new List<Vector3>();
+    public List<GameObject> vertices = new List<GameObject>();
+    public List<GameObject> bastList = new List<GameObject>();
+    public List<Node> OpenList = new List<Node>();
 
     private float Speed;
 
@@ -26,6 +28,9 @@ public class EnemyController : MonoBehaviour
 
     [Range(1.0f, 2.0f)]
     public float scale;
+
+
+    private GameObject parent;
 
 
     private void Awake()
@@ -42,6 +47,7 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
+        parent = new GameObject("Nodes");
         Speed = 5.0f;
 
         float x = 2.5f;
@@ -89,7 +95,14 @@ public class EnemyController : MonoBehaviour
                         temp[i].z);
                 }
 
+                GameObject startPoint = null;
+                float dis = 0.0f;
+
+                float bastDistance = 1000000.0f;
+
+                OpenList.Clear();
                 vertices.Clear();
+
                 for (int i = 0; i < temp.Count; ++i)
                 {
                     GameObject obj = new GameObject(i.ToString());
@@ -103,11 +116,85 @@ public class EnemyController : MonoBehaviour
                     matrix[M] = matrix[T] * matrix[R] * matrix[S];
 
                     Vector3 v = matrix[M].MultiplyPoint(temp[i]);
-
-                    vertices.Add(v);
+                    dis = Vector3.Distance(transform.position, v);
 
                     obj.transform.position = v;
-                    obj.AddComponent<MyGizmo>();
+                    obj.AddComponent<Node>();
+
+                    obj.transform.SetParent(parent.transform);
+                    MyGizmo gizmo = obj.AddComponent<MyGizmo>();
+
+                    if (dis < bastDistance)
+                    {
+                        bastDistance = dis;
+                        startPoint = obj;
+
+                        if(i == 0)
+                            vertices.Add(obj);
+                    }
+                    else
+                        vertices.Add(obj);
+                }
+
+                if(startPoint)
+                {
+                    startPoint.GetComponent<MyGizmo>().color = Color.red;
+                    OpenList.Add(startPoint.GetComponent<Node>());
+                }
+
+                Node MainNode = OpenList[0].GetComponent<Node>();
+                MainNode.Cost = 0.0f;
+
+                while (vertices.Count != 0)
+                {
+                    float OldDistance = 1000000.0f;
+                    int index = 0;
+
+                    for (int i = 0; i < vertices.Count; ++i)
+                    {
+                        float Distance = Vector3.Distance(OpenList[0].transform.position, vertices[i].transform.position);
+
+                        if (Distance < OldDistance)
+                        {
+                            OldDistance = Distance;
+                            Node Nextnode = vertices[i].GetComponent<Node>();
+                            Nextnode.Cost = MainNode.Cost + Distance;
+                            index = i;
+                        }
+                    }
+
+                    if (!OpenList.Contains(vertices[index].GetComponent<Node>()))
+                    {
+
+
+
+                        /*
+                         * 조건 1
+                        RaycastHit Hit;
+
+                        if (Physics.Raycast(origin(이전노드), direction(현재노드), out Hit, OldDistance))
+                        {
+                            if (hit.transform.tag != "Node")
+                            {
+
+                            }
+                            else
+                            {
+
+                            }
+                        }
+                        */
+
+                        /*
+                         * 조건 2
+                         * 이전 노드의 위치에서 EndPoint의 거리보다 현재에서 EndPoint의 거리가 더 짧을때
+                         */
+
+                        OpenList.Add(vertices[index].GetComponent<Node>());
+                        vertices[index].GetComponent<Node>();
+                        
+                        vertices.Remove(vertices[index]);
+                    }
                 }
             }
         }
